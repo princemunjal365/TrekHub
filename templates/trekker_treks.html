@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrekHub | Trekker | Treks</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg border-2 border-bottom border-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <b>
+                <span class="text-primary">Trek</span><span class="text-danger">Hub</span>
+            </b>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+            <a class="nav-link" href="/trekker_dashboard/{{user.user_id}}/{{trekker.trekker_id}}/{{user.auth_key}}/">Dashboard</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link active" href="/trekker_dashboard/{{user.user_id}}/{{trekker.trekker_id}}/{{user.auth_key}}/treks/">My Treks</a>
+            </li>
+        </ul>
+        <form class="d-flex" role="logout" method="POST">
+            <button class="btn btn-outline-danger" name ='logout' value="logout" type="submit">Logout</button>
+        </form>
+        </div>
+    </div>
+    </nav>
+
+    <div class="alert alert-{{alert_type}} bg-white {{alert_visibility}} alert-dismissible fade show m-4" role="alert">
+        <strong>{{alert_status}} !</strong> {{alert_message}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="container p-2 text-center my-5 border border-primary rounded">
+        <div class="container pt-1 d-flex bg-danger justify-content-center border border-danger rounded">
+            <h4 class="text-white font-monospace pt-1">Your Treks</h4>
+        </div>
+        {% if final|length > 0 %}
+        <form method = "POST">
+            <table class="table">
+            <thead>
+                <tr>
+                    <th>Trek Name</th>
+                    <th>Booked On</th>
+                    <th>Trek Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+                {% for i in final %}
+                <tr>
+                    <td>{{i[5]}}</td>
+                    <td>{{i[1].strftime("%Y-%m-%d %H:%M:%S")}}</td>
+                    <td>{{i[4]}}</td>
+                    {% if i[4]!='completed' %}
+                        <td><button class = 'btn btn-primary' disabled>Rate</button></td>
+                    {% else %}
+                        {% if i[2]=='no' and i[3]=='no' %}
+                        <td><input type = 'number' placeholder = 'Rate Staff' class = ' col-3 mx-1' min='1' max='5' name = 'rate_staff' required><input type = 'number' placeholder = 'Rate Trek' class = ' col-3 mx-1' min='1' max='5' name = 'rate_trek' required><button type = 'submit' name = 'rate' value = '{{i[6]}}-{{i[0]}}-{{i[7]}}' class = 'btn btn-primary'>Rate</button>
+                        </td>
+                        {% else %}
+                        <td><button class = 'btn btn-success' disabled>Rated</button></td>
+                        {% endif %}
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            <tbody>
+            </tbody>
+            </table>
+        </form>
+        {% else %}
+        <p class="text-secondary pt-3">
+            No Treks found .
+        </p>
+        {% endif %}
+    </div>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</body>
+</html>

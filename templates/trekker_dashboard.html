@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrekHub | Trekker | Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg border-2 border-bottom border-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <b>
+                <span class="text-primary">Trek</span><span class="text-danger">Hub</span>
+            </b>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+            <a class="nav-link active" href="/trekker_dashboard/{{user.user_id}}/{{trekker.trekker_id}}/{{user.auth_key}}/">Dashboard</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="/trekker_dashboard/{{user.user_id}}/{{trekker.trekker_id}}/{{user.auth_key}}/treks/">My Treks</a>
+            </li>
+        </ul>
+        <form class="d-flex" role="logout" method="POST">
+            <button class="btn btn-outline-danger" name ='logout' value="logout" type="submit">Logout</button>
+        </form>
+        </div>
+    </div>
+    </nav>
+
+    <div class="alert alert-{{alert_type}} bg-white {{alert_visibility}} alert-dismissible fade show m-4" role="alert">
+        <strong>{{alert_status}} !</strong> {{alert_message}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="container p-2 text-center my-5 border border-primary rounded">
+        <div class="container pt-1 d-flex bg-danger justify-content-center border border-danger rounded">
+            <h4 class="text-white font-monospace pt-1">Upcoming Treks</h4>
+        </div>
+        {% if final|length > 0 %}
+        <form method = "POST">
+            <div class="container d-flex flex-wrap justify-content-center">
+                {% for i in final %}
+                <div class="card m-3">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">#{{i[0]}} | {{i[1]}}</h5>
+                        <p class="card-text m-0"><b>Location :</b> {{i[2]}}</p>
+                        <p class="card-text m-0"><b>Difficulty :</b> {{i[3]}}</p>
+                        <p class="card-text m-0"><b>Remainig Slots :</b> {{ i[4] }}</p>
+                        <p class="card-text m-0"><b>Duration :</b> {{i[8]}} days </p>
+                        <p class="card-text m-0"><b>From :</b> {{i[6]}}</p>
+                        <p class="card-text m-0"><b>To :</b> {{i[7]}}</p>
+                        <p class="card-text m-0"><b>Booking Deadline :</b> {{i[5]}}</p>
+                        {% if i|length == 10 %}
+                            {% if i[4] > 0 %}
+                                <button type="submit" class="btn btn-primary mt-2" name = 'book' value='{{trekker.trekker_id}}-{{i[0]}}'>Book</button>
+                            {% else %}  
+                                <button type="button" class="btn btn-primary mt-2"  data-toggle="tooltip" data-placement="top" title="Stay tuned, might available in future in case of any cancellation">Full</button>
+                            {% endif %}
+                        {% else %}
+                            {% if i[10]=='pending' %}
+                                <button type="button" class="btn btn-primary mt-2" disabled>Requested</button>
+                            {% elif i[10]=='booked' %}
+                                <button type="submit" class="btn btn-danger mt-2" name = 'cancel' value='{{trekker.trekker_id}}-{{i[0]}}'>Cancel</button>
+                            {% elif i[10]=='canceled' %}
+                                <button type="button" class="btn btn-danger mt-2" disabled>Cancelled</button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}    
+            </div>
+        </form>
+        {% else %}
+        <p class="text-secondary pt-3">
+            No Upcoming Treks .
+        </p>
+        {% endif %}
+    </div>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</body>
+</html>

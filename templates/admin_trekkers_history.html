@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrekHub | Admin | Trekkers | History</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg border-2 border-bottom border-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <b>
+                <span class="text-primary">Trek</span><span class="text-danger">Hub</span>
+            </b>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+            <a class="nav-link" href="/admin_dashboard/{{user.user_id}}/{{user.auth_key}}/">Dashboard</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="/admin_dashboard/{{user.user_id}}/{{user.auth_key}}/treks/">Treks</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="/admin_dashboard/{{user.user_id}}/{{user.auth_key}}/trekkers/">Trekkers</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="/admin_dashboard/{{user.user_id}}/{{user.auth_key}}/staff/">Staff</a>
+            </li>
+            </li>
+        </ul>
+        <form class="d-flex" role="logout" method="POST">
+            <button class="btn btn-outline-danger" name ='logout' value="logout" type="submit">Logout</button>
+        </form>
+        </div>
+    </div>
+    </nav>
+
+    <div class="container p-2  my-5 border border-primary rounded">
+        <div>
+            <span class = "text-secondary font-monospace">User_ID : </span><span class="text-danger">{{trekker.user_id}}</span>
+        </div>
+        <div>
+            <span class = "text-secondary font-monospace">Trekker_ID : </span><span class="text-danger">{{trekker.trekker_id}}</span>
+        </div>
+        <div>
+            <span class = "text-secondary font-monospace">Name : </span><span class="text-danger">{{trekker.name}}</span>
+        </div>
+        <div>
+            <span class = "text-secondary font-monospace">Email : </span><span class="text-danger">{{email}}</span>
+        </div>
+        <div>
+            <span class = "text-secondary font-monospace">Status : </span><span class="text-danger">{{trekker.status}}</span>
+        </div>
+    </div>
+
+    <div class="container p-2 text-center my-5 border border-primary rounded">
+        <div class="container pt-1 bg-danger border border-danger rounded">
+            <h4 class="text-white font-monospace pt-1">Booking History</h4>
+        </div>
+        {% if bookings|length > 0 %}
+        <form method="POST" class="pt-3">
+            <table class="table">
+            <thead>
+                <tr>
+                    <th>Booking_ID</th>
+                    <th>Trek_ID</th>
+                    <th>Booking Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                <td>{{booking.booking_id}}</td>
+                <td>{{booking.trek_id}}</td>
+                <td>{{booking.booking_date.strftime('%Y-%m-%d %H:%M:%S')}}</td>
+                <td>{{booking.status}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </form>
+        {% else %}
+        <p class="text-secondary pt-3">
+            Bookings not found .
+        </p>
+        {% endif %}
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</body>
+</html>
