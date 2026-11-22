@@ -1,0 +1,210 @@
+{% extends "base.html" %} {% block title %}Explore Treks - TrekHub{% endblock %}
+{% block content %}
+<div
+  class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"
+>
+  <div>
+    <h1 class="h3 fw-bold mb-1">Explore Treks</h1>
+    <p class="text-muted mb-0">
+      Welcome, {{ user.name }}. Search open treks by difficulty or location and
+      reserve your slot.
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('user.bookings') }}" class="btn btn-outline-trek"
+      >My Bookings ({{ user_bookings|length }})</a
+    >
+    <a href="{{ url_for('user.profile') }}" class="btn btn-outline-secondary"
+      >Edit Profile</a
+    >
+  </div>
+</div>
+
+<div class="card card-trek bg-white p-3 mb-4">
+  <form
+    action="{{ url_for('user.dashboard') }}"
+    method="GET"
+    class="row g-2 align-items-end"
+  >
+    <div class="col-md-4">
+      <label for="q" class="form-label small fw-semibold mb-1"
+        >Search Keyword</label
+      >
+      <input
+        type="text"
+        class="form-control"
+        id="q"
+        name="q"
+        value="{{ query }}"
+        placeholder="Trek name or region"
+      />
+    </div>
+    <div class="col-md-3">
+      <label for="difficulty" class="form-label small fw-semibold mb-1"
+        >Difficulty</label
+      >
+      <select class="form-select" id="difficulty" name="difficulty">
+        <option value="">All Difficulties</option>
+        {% for diff in difficulties %} {% if selected_difficulty == diff %}
+        <option value="{{ diff }}" selected>{{ diff }}</option>
+        {% else %}
+        <option value="{{ diff }}">{{ diff }}</option>
+        {% endif %} {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label for="location" class="form-label small fw-semibold mb-1"
+        >Location</label
+      >
+      <select class="form-select" id="location" name="location">
+        <option value="">All Locations</option>
+        {% for loc in locations %} {% if selected_location == loc %}
+        <option value="{{ loc }}" selected>{{ loc }}</option>
+        {% else %}
+        <option value="{{ loc }}">{{ loc }}</option>
+        {% endif %} {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-1">
+      <button type="submit" class="btn btn-trek flex-grow-1">Filter</button>
+      {% if query or selected_difficulty or selected_location %}
+      <a
+        href="{{ url_for('user.dashboard') }}"
+        class="btn btn-outline-secondary"
+        >Reset</a
+      >
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<h2 class="h5 fw-bold mb-3">Available Treks</h2>
+{% if available_treks %}
+<div class="row g-4 mb-5">
+  {% for trek in available_treks %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card card-trek bg-white p-4 h-100 d-flex flex-column">
+      <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+        <h3 class="h5 fw-bold mb-0">{{ trek.name }}</h3>
+        <span class="badge {{ status_badge_class(trek.status) }}"
+          >{{ trek.status }}</span
+        >
+      </div>
+      <p class="text-muted small mb-2">
+        {{ trek.location }} &middot; {{ trek.duration_days }} day(s)
+      </p>
+
+      <div class="d-flex flex-wrap gap-1 mb-3">
+        <span class="badge {{ difficulty_badge_class(trek.difficulty) }}"
+          >{{ trek.difficulty }}</span
+        >
+        <span class="badge bg-light text-dark border"
+          >{{ trek.available_slots }} / {{ trek.total_slots }} slots left</span
+        >
+      </div>
+
+      <div class="small text-muted mb-3">
+        <div>
+          <strong>Dates:</strong> {{ trek.start_date.strftime('%d %b %Y') }}
+          &ndash; {{ trek.end_date.strftime('%d %b %Y') }}
+        </div>
+        <div>
+          <strong>Guide:</strong> {{ trek.assigned_staff.name if
+          trek.assigned_staff else 'To be assigned' }}
+        </div>
+      </div>
+
+      {% if trek.description %}
+      <p class="small text-muted mb-3">
+        {{ trek.description[:110] }}{% if trek.description|length > 110 %}...{%
+        endif %}
+      </p>
+      {% endif %}
+
+      <div
+        class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top"
+      >
+        <span class="fs-5 fw-bold text-success"
+          >{{ format_inr(trek.price) }}</span
+        >
+        <a
+          href="{{ url_for('user.trek_detail', trek_id=trek.id) }}"
+          class="btn btn-sm btn-trek"
+          >View &amp; Book</a
+        >
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card card-trek bg-white p-4 mb-5">
+  <p class="text-muted mb-0">No treks match your current search or filter.</p>
+</div>
+{% endif %}
+
+<div class="card card-trek bg-white p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 fw-bold mb-0">Recent Bookings</h2>
+    <a href="{{ url_for('user.bookings') }}" class="btn btn-sm btn-outline-trek"
+      >Full Trekking History</a
+    >
+  </div>
+
+  {% if user_bookings %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-trekhub mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Trek</th>
+          <th>Dates</th>
+          <th>Slots</th>
+          <th>Trek Status</th>
+          <th>Booking Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for booking in user_bookings[:5] %}
+        <tr>
+          <td>#{{ booking.id }}</td>
+          <td class="fw-semibold">{{ booking.trek.name }}</td>
+          <td class="small">
+            {{ booking.trek.start_date.strftime('%d %b %Y') }}
+          </td>
+          <td>{{ booking.slots_booked }}</td>
+          <td>
+            <span class="badge {{ status_badge_class(booking.trek.status) }}"
+              >{{ booking.trek.status }}</span
+            >
+          </td>
+          <td>
+            <span class="badge {{ status_badge_class(booking.status) }}"
+              >{{ booking.status }}</span
+            >
+          </td>
+          <td>
+            <a
+              href="{{ url_for('user.trek_detail', trek_id=booking.trek.id) }}"
+              class="btn btn-sm btn-outline-primary"
+              >Details</a
+            >
+            {% if booking.status != 'Cancelled' %}
+            <a
+              href="{{ url_for('location.view_location', trek_id=booking.trek.id) }}"
+              class="btn btn-sm btn-outline-trek"
+              >Track</a
+            >
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">You have not booked any treks yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

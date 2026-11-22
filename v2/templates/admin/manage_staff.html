@@ -1,0 +1,114 @@
+{% extends "base.html" %} {% block title %}Manage Trek Staff - TrekHub{%
+endblock %} {% block content %}
+<div class="mb-4">
+  <h1 class="h3 fw-bold mb-1">Manage Trek Staff</h1>
+  <p class="text-muted mb-0">
+    Approve new staff registrations, view assignments, or blacklist accounts
+  </p>
+</div>
+
+<div class="card card-trek bg-white p-3 mb-4">
+  <form
+    action="{{ url_for('admin.manage_staff') }}"
+    method="GET"
+    class="row g-2 align-items-center"
+  >
+    <div class="col-md-8">
+      <input
+        type="text"
+        class="form-control"
+        name="q"
+        value="{{ query }}"
+        placeholder="Search by Staff ID, Name, or Email"
+      />
+    </div>
+    <div class="col-md-4 d-flex gap-2">
+      <button type="submit" class="btn btn-trek flex-grow-1">Search</button>
+      {% if query %}
+      <a
+        href="{{ url_for('admin.manage_staff') }}"
+        class="btn btn-outline-secondary"
+        >Reset</a
+      >
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<div class="card card-trek bg-white p-4">
+  {% if staff_members %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-trekhub mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Staff Member</th>
+          <th>Contact</th>
+          <th>Experience</th>
+          <th>Assigned Treks</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for staff in staff_members %}
+        <tr>
+          <td>#{{ staff.id }}</td>
+          <td>
+            <div class="fw-semibold">{{ staff.name }}</div>
+            <small class="text-muted">{{ staff.email }}</small>
+          </td>
+          <td class="small">{{ staff.phone or 'N/A' }}</td>
+          <td class="small" style="max-width: 240px">
+            {{ staff.experience or 'Not specified' }}
+          </td>
+          <td>{{ staff.assigned_treks|length }}</td>
+          <td>
+            {% if staff.is_blacklisted %}
+            <span class="badge bg-danger">Blacklisted</span>
+            {% elif staff.is_approved %}
+            <span class="badge bg-success">Approved</span>
+            {% else %}
+            <span class="badge bg-warning text-dark">Pending Approval</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="d-flex flex-wrap gap-1">
+              {% if not staff.is_approved and not staff.is_blacklisted %}
+              <form
+                action="{{ url_for('admin.approve_staff', staff_id=staff.id) }}"
+                method="POST"
+                class="d-inline"
+              >
+                <button type="submit" class="btn btn-sm btn-success">
+                  Approve
+                </button>
+              </form>
+              {% endif %}
+              <form
+                action="{{ url_for('admin.toggle_blacklist_staff', staff_id=staff.id) }}"
+                method="POST"
+                class="d-inline"
+              >
+                {% if staff.is_blacklisted %}
+                <button type="submit" class="btn btn-sm btn-outline-success">
+                  Restore
+                </button>
+                {% else %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  Blacklist
+                </button>
+                {% endif %}
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No staff accounts found.</p>
+  {% endif %}
+</div>
+{% endblock %}

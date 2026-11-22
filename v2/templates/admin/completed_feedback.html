@@ -1,0 +1,119 @@
+{% extends "base.html" %} {% block title %}Completed Trek Feedback - TrekHub{%
+endblock %} {% block content %}
+<div
+  class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"
+>
+  <div>
+    <h1 class="h3 fw-bold mb-1">Completed Trek Feedback</h1>
+    <p class="text-muted mb-0">
+      Private post-trek feedback submitted by trekkers on completed treks
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a
+      href="{{ url_for('admin.manage_treks') }}"
+      class="btn btn-outline-trek btn-sm"
+      >Manage Treks</a
+    >
+    <a
+      href="{{ url_for('admin.dashboard') }}"
+      class="btn btn-outline-secondary btn-sm"
+      >&larr; Back to Dashboard</a
+    >
+  </div>
+</div>
+
+<div class="card card-trek bg-white p-3 mb-4">
+  <form
+    action="{{ url_for('admin.completed_feedback') }}"
+    method="GET"
+    class="row g-2 align-items-end"
+  >
+    <div class="col-md-8">
+      <label for="trek_id" class="form-label small fw-semibold mb-1"
+        >Filter by Completed Trek</label
+      >
+      <select class="form-select" id="trek_id" name="trek_id">
+        <option value="">All Completed Treks</option>
+        {% for t in completed_treks %} {% if selected_trek_id == t.id %}
+        <option value="{{ t.id }}" selected>
+          {{ t.name }} ({{ t.end_date.strftime('%d %b %Y') }})
+        </option>
+        {% else %}
+        <option value="{{ t.id }}">
+          {{ t.name }} ({{ t.end_date.strftime('%d %b %Y') }})
+        </option>
+        {% endif %} {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4 d-flex gap-2">
+      <button type="submit" class="btn btn-trek">Filter</button>
+      {% if selected_trek_id %}
+      <a
+        href="{{ url_for('admin.completed_feedback') }}"
+        class="btn btn-outline-secondary"
+        >Reset</a
+      >
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<div class="card card-trek bg-white p-4">
+  {% if feedback_list %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-trekhub mb-0">
+      <thead>
+        <tr>
+          <th>Trek</th>
+          <th>Guide</th>
+          <th>Trekker</th>
+          <th>Rating</th>
+          <th>Feedback</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in feedback_list %}
+        <tr>
+          <td>
+            <a
+              href="{{ url_for('user.trek_detail', trek_id=item.trek.id) }}"
+              class="fw-semibold text-decoration-none"
+            >
+              {{ item.trek.name }}
+            </a>
+            <div class="small text-muted">
+              {{ item.trek.location }} &middot; Ended {{
+              item.trek.end_date.strftime('%d %b %Y') }}
+            </div>
+          </td>
+          <td class="small">
+            {{ item.trek.assigned_staff.name if item.trek.assigned_staff else
+            'Unassigned' }}
+          </td>
+          <td>
+            <div class="fw-semibold">{{ item.user.name }}</div>
+            <small class="text-muted">{{ item.user.email }}</small>
+          </td>
+          <td>
+            <span class="badge bg-info text-dark">{{ item.rating }} / 5</span>
+          </td>
+          <td class="small">
+            {{ item.comment or 'No written comment provided.' }}
+          </td>
+          <td class="small text-muted">
+            {{ item.created_at.strftime('%d %b %Y') }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">
+    No feedback has been submitted for completed treks yet.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

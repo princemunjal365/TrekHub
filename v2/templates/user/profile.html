@@ -1,0 +1,117 @@
+{% extends "base.html" %} {% block title %}My Profile - TrekHub{% endblock %} {%
+block content %}
+<div class="row justify-content-center my-3">
+  <div class="col-md-8 col-lg-7">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h3 fw-bold mb-0">My Profile</h1>
+      <a
+        href="{{ url_for('user.dashboard') }}"
+        class="btn btn-outline-secondary btn-sm"
+        >&larr; Back to Dashboard</a
+      >
+    </div>
+
+    <div class="card card-trek bg-white p-4">
+      <form action="{{ url_for('user.profile') }}" method="POST">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="name" class="form-label fw-semibold">Full Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="name"
+              name="name"
+              value="{{ user.name }}"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="email" class="form-label fw-semibold"
+              >Email Address</label
+            >
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              value="{{ user.email }}"
+              disabled
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="phone" class="form-label fw-semibold"
+              >Phone Number</label
+            >
+            <input
+              type="tel"
+              class="form-control"
+              id="phone"
+              name="phone"
+              value="{{ user.phone or '' }}"
+              placeholder="+91 98765 43210"
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="emergency_contact" class="form-label fw-semibold"
+              >Emergency Contact</label
+            >
+            <input
+              type="tel"
+              class="form-control"
+              id="emergency_contact"
+              name="emergency_contact"
+              value="{{ user.emergency_contact or '' }}"
+              placeholder="Emergency phone number"
+            />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+        <h2 class="h6 fw-bold mb-3">
+          Change Password <span class="text-muted fw-normal">(Optional)</span>
+        </h2>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="current_password" class="form-label fw-semibold"
+              >Current Password</label
+            >
+            <input
+              type="password"
+              class="form-control"
+              id="current_password"
+              name="current_password"
+              placeholder="Required to change password"
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="new_password" class="form-label fw-semibold"
+              >New Password</label
+            >
+            <input
+              type="password"
+              class="form-control"
+              id="new_password"
+              name="new_password"
+              minlength="6"
+              placeholder="Minimum 6 characters"
+            />
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a
+            href="{{ url_for('user.dashboard') }}"
+            class="btn btn-outline-secondary"
+            >Cancel</a
+          >
+          <button type="submit" class="btn btn-trek">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

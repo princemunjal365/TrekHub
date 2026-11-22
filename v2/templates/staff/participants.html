@@ -1,0 +1,102 @@
+{% extends "base.html" %} {% block title %}Participants - {{ trek.name }} -
+TrekHub{% endblock %} {% block content %}
+<div
+  class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"
+>
+  <div>
+    <h1 class="h3 fw-bold mb-1">{{ trek.name }} &mdash; Participants</h1>
+    <p class="text-muted mb-0">
+      {{ trek.location }} &middot; {{ trek.start_date.strftime('%d %b %Y') }} to
+      {{ trek.end_date.strftime('%d %b %Y') }} &middot;
+      <span class="badge {{ status_badge_class(trek.status) }}"
+        >{{ trek.status }}</span
+      >
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a
+      href="{{ url_for('location.view_location', trek_id=trek.id) }}"
+      class="btn btn-trek btn-sm"
+      >Live Location</a
+    >
+    <a
+      href="{{ url_for('staff.assigned_treks') }}"
+      class="btn btn-outline-secondary btn-sm"
+      >&larr; Back to Assigned Treks</a
+    >
+  </div>
+</div>
+
+<div class="card card-trek bg-white p-4">
+  {% if bookings %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-trekhub mb-0">
+      <thead>
+        <tr>
+          <th>Booking ID</th>
+          <th>Trekker</th>
+          <th>Phone</th>
+          <th>Emergency Contact</th>
+          <th>Slots</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Update Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for booking in bookings %}
+        <tr>
+          <td>#{{ booking.id }}</td>
+          <td>
+            <div class="fw-semibold">{{ booking.user.name }}</div>
+            <small class="text-muted">{{ booking.user.email }}</small>
+          </td>
+          <td class="small">{{ booking.user.phone or 'N/A' }}</td>
+          <td class="small">{{ booking.user.emergency_contact or 'N/A' }}</td>
+          <td>{{ booking.slots_booked }}</td>
+          <td>
+            {% if booking.payment %}
+            <span class="badge {{ status_badge_class(booking.payment.status) }}"
+              >{{ booking.payment.status }}</span
+            >
+            {% else %}
+            <span class="badge bg-warning text-dark">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge {{ status_badge_class(booking.status) }}"
+              >{{ booking.status }}</span
+            >
+          </td>
+          <td>
+            <form
+              action="{{ url_for('staff.update_booking_status', trek_id=trek.id, booking_id=booking.id) }}"
+              method="POST"
+              class="d-flex gap-1"
+            >
+              <select
+                name="status"
+                class="form-select form-select-sm"
+                style="min-width: 120px"
+              >
+                {% for st in booking_statuses %} {% if booking.status == st %}
+                <option value="{{ st }}" selected>{{ st }}</option>
+                {% else %}
+                <option value="{{ st }}">{{ st }}</option>
+                {% endif %} {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-sm btn-outline-trek">
+                Save
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No trekkers have registered for this trek yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

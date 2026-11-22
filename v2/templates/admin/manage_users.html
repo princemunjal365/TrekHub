@@ -1,0 +1,99 @@
+{% extends "base.html" %} {% block title %}Manage Trekkers - TrekHub{% endblock
+%} {% block content %}
+<div class="mb-4">
+  <h1 class="h3 fw-bold mb-1">Manage Trekkers</h1>
+  <p class="text-muted mb-0">
+    Search registered users, inspect booking counts, or blacklist accounts
+  </p>
+</div>
+
+<div class="card card-trek bg-white p-3 mb-4">
+  <form
+    action="{{ url_for('admin.manage_users') }}"
+    method="GET"
+    class="row g-2 align-items-center"
+  >
+    <div class="col-md-8">
+      <input
+        type="text"
+        class="form-control"
+        name="q"
+        value="{{ query }}"
+        placeholder="Search by User ID, Name, or Email"
+      />
+    </div>
+    <div class="col-md-4 d-flex gap-2">
+      <button type="submit" class="btn btn-trek flex-grow-1">Search</button>
+      {% if query %}
+      <a
+        href="{{ url_for('admin.manage_users') }}"
+        class="btn btn-outline-secondary"
+        >Reset</a
+      >
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<div class="card card-trek bg-white p-4">
+  {% if users %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-trekhub mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Trekker</th>
+          <th>Phone</th>
+          <th>Emergency Contact</th>
+          <th>Bookings</th>
+          <th>Joined</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>#{{ u.id }}</td>
+          <td>
+            <div class="fw-semibold">{{ u.name }}</div>
+            <small class="text-muted">{{ u.email }}</small>
+          </td>
+          <td class="small">{{ u.phone or 'N/A' }}</td>
+          <td class="small">{{ u.emergency_contact or 'N/A' }}</td>
+          <td>{{ u.bookings|length }}</td>
+          <td class="small">{{ u.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            {% if u.is_blacklisted %}
+            <span class="badge bg-danger">Blacklisted</span>
+            {% else %}
+            <span class="badge bg-success">Active</span>
+            {% endif %}
+          </td>
+          <td>
+            <form
+              action="{{ url_for('admin.toggle_blacklist_user', user_id=u.id) }}"
+              method="POST"
+              class="d-inline"
+            >
+              {% if u.is_blacklisted %}
+              <button type="submit" class="btn btn-sm btn-outline-success">
+                Restore
+              </button>
+              {% else %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                Blacklist
+              </button>
+              {% endif %}
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No trekkers found matching your search.</p>
+  {% endif %}
+</div>
+{% endblock %}

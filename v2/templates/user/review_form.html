@@ -1,0 +1,80 @@
+{% extends "base.html" %} {% block title %}{{ 'Edit Review' if review else 'Rate
+Trek' }} - {{ trek.name }} - TrekHub{% endblock %} {% block content %}
+<div class="row justify-content-center my-3">
+  <div class="col-md-8 col-lg-6">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h4 fw-bold mb-0">
+        {{ 'Edit Your Review' if review else 'Rate & Review Trek' }}
+      </h1>
+      <a
+        href="{{ url_for('user.trek_detail', trek_id=trek.id) }}"
+        class="btn btn-outline-secondary btn-sm"
+        >&larr; Back to Trek</a
+      >
+    </div>
+
+    <div class="card card-trek bg-white p-4">
+      <div class="mb-3 pb-3 border-bottom">
+        <h2 class="h5 fw-bold mb-1">{{ trek.name }}</h2>
+        <p class="text-muted small mb-0">
+          {{ trek.location }} &middot; {{ trek.difficulty }} &middot; {{
+          trek.duration_days }} day(s)
+        </p>
+      </div>
+
+      <form
+        action="{{ url_for('review.add_review', trek_id=trek.id) }}"
+        method="POST"
+      >
+        <div class="mb-3">
+          <label for="rating" class="form-label fw-semibold"
+            >Overall Rating</label
+          >
+          <select class="form-select" id="rating" name="rating" required>
+            {% for score in [5, 4, 3, 2, 1] %} {% if review and review.rating ==
+            score %}
+            <option value="{{ score }}" selected>{{ score }} / 5</option>
+            {% else %}
+            <option value="{{ score }}">{{ score }} / 5</option>
+            {% endif %} {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label for="comment" class="form-label fw-semibold"
+            >Your Experience</label
+          >
+          <textarea
+            class="form-control"
+            id="comment"
+            name="comment"
+            rows="4"
+            placeholder="Share trail conditions, guide support, and tips for future trekkers..."
+          >
+{{ review.comment if review and review.comment else '' }}</textarea
+          >
+        </div>
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-trek btn-lg">
+            {{ 'Update Review' if review else 'Submit Review' }}
+          </button>
+        </div>
+      </form>
+
+      {% if review %}
+      <hr class="my-4" />
+      <form
+        action="{{ url_for('review.delete_review', review_id=review.id) }}"
+        method="POST"
+        class="d-grid"
+      >
+        <button type="submit" class="btn btn-outline-danger">
+          Delete My Review
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %} {% block title %}All Bookings - TrekHub{% endblock %}
+{% block content %}
+<div
+  class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"
+>
+  <div>
+    <h1 class="h3 fw-bold mb-1">All Bookings</h1>
+    <p class="text-muted mb-0">
+      Complete historical record of trek bookings and payments
+    </p>
+  </div>
+  <div class="btn-group" role="group">
+    <a
+      href="{{ url_for('admin.all_bookings') }}"
+      class="btn btn-sm {{ 'btn-trek' if not status_filter else 'btn-outline-trek' }}"
+      >All</a
+    >
+    <a
+      href="{{ url_for('admin.all_bookings', status='Booked') }}"
+      class="btn btn-sm {{ 'btn-trek' if status_filter == 'Booked' else 'btn-outline-trek' }}"
+      >Booked</a
+    >
+    <a
+      href="{{ url_for('admin.all_bookings', status='Completed') }}"
+      class="btn btn-sm {{ 'btn-trek' if status_filter == 'Completed' else 'btn-outline-trek' }}"
+      >Completed</a
+    >
+    <a
+      href="{{ url_for('admin.all_bookings', status='Cancelled') }}"
+      class="btn btn-sm {{ 'btn-trek' if status_filter == 'Cancelled' else 'btn-outline-trek' }}"
+      >Cancelled</a
+    >
+  </div>
+</div>
+
+<div class="card card-trek bg-white p-4">
+  {% if bookings %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-trekhub mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Trekker</th>
+          <th>Trek</th>
+          <th>Slots</th>
+          <th>Total Amount</th>
+          <th>Booked On</th>
+          <th>Booking Status</th>
+          <th>Payment</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for booking in bookings %}
+        <tr>
+          <td>#{{ booking.id }}</td>
+          <td>
+            <div class="fw-semibold">{{ booking.user.name }}</div>
+            <small class="text-muted">{{ booking.user.email }}</small>
+          </td>
+          <td>
+            <div class="fw-semibold">{{ booking.trek.name }}</div>
+            <small class="text-muted">{{ booking.trek.location }}</small>
+          </td>
+          <td>{{ booking.slots_booked }}</td>
+          <td>{{ format_inr(booking.total_amount) }}</td>
+          <td class="small">
+            {{ booking.booking_date.strftime('%d %b %Y, %I:%M %p') }}
+          </td>
+          <td>
+            <span class="badge {{ status_badge_class(booking.status) }}"
+              >{{ booking.status }}</span
+            >
+          </td>
+          <td>
+            {% if booking.payment %}
+            <span class="badge {{ status_badge_class(booking.payment.status) }}"
+              >{{ booking.payment.status }}</span
+            >
+            <a
+              href="{{ url_for('payment.receipt', booking_id=booking.id) }}"
+              class="btn btn-sm btn-link p-0 ms-1 text-decoration-none"
+              >Receipt</a
+            >
+            {% else %}
+            <span class="badge bg-warning text-dark">Pending</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No bookings found for this filter.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,230 @@
+{% extends "base.html" %} {% block title %}{{ trek.name }} - TrekHub{% endblock
+%} {% block content %}
+<div class="mb-3">
+  <a
+    href="{{ url_for('user.dashboard') }}"
+    class="btn btn-outline-secondary btn-sm"
+    >&larr; Back to Explore Treks</a
+  >
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card card-trek bg-white p-4">
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3"
+      >
+        <div>
+          <h1 class="h3 fw-bold mb-1">{{ trek.name }}</h1>
+          <p class="text-muted mb-0">
+            {{ trek.location }} &middot; {{ trek.duration_days }} day(s)
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <span class="badge {{ difficulty_badge_class(trek.difficulty) }} fs-6"
+            >{{ trek.difficulty }}</span
+          >
+          <span class="badge {{ status_badge_class(trek.status) }} fs-6"
+            >{{ trek.status }}</span
+          >
+        </div>
+      </div>
+
+      <div class="row g-3 my-2">
+        <div class="col-sm-6 col-md-3">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="small text-muted">Start Date</div>
+            <div class="fw-bold">
+              {{ trek.start_date.strftime('%d %b %Y') }}
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="small text-muted">End Date</div>
+            <div class="fw-bold">{{ trek.end_date.strftime('%d %b %Y') }}</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="small text-muted">Available Slots</div>
+            <div class="fw-bold">
+              {{ trek.available_slots }} / {{ trek.total_slots }}
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <div class="border rounded-3 p-3 h-100">
+            <div class="small text-muted">Average Rating</div>
+            <div class="fw-bold">
+              {% if avg_rating is not none %} {{ avg_rating }} / 5 {% else %}
+              Private {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <h2 class="h6 fw-bold text-uppercase text-muted">
+          Assigned Trek Guide
+        </h2>
+        <p class="mb-3">
+          {{ trek.assigned_staff.name if trek.assigned_staff else 'To be
+          assigned' }}
+        </p>
+
+        <h2 class="h6 fw-bold text-uppercase text-muted">Trek Overview</h2>
+        <p class="mb-0">
+          {{ trek.description or 'No additional itinerary notes provided for
+          this trek.' }}
+        </p>
+      </div>
+
+      {% if existing_booking and existing_booking.status != 'Cancelled' %}
+      <hr class="my-4" />
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center gap-2"
+      >
+        <div>
+          <span class="badge bg-success me-2"
+            >Booked ({{ existing_booking.slots_booked }} slot(s))</span
+          >
+          <span class="small text-muted"
+            >Booking #{{ existing_booking.id }}</span
+          >
+        </div>
+        <div class="d-flex gap-2">
+          <a
+            href="{{ url_for('location.view_location', trek_id=trek.id) }}"
+            class="btn btn-sm btn-outline-trek"
+            >Live Location &amp; Check-Ins</a
+          >
+          {% if trek.status == 'Completed' %}
+          <a
+            href="{{ url_for('review.add_review', trek_id=trek.id) }}"
+            class="btn btn-sm btn-trek"
+          >
+            {{ 'Edit Feedback' if existing_review else 'Submit Feedback' }}
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="card card-trek bg-white p-4 mt-4">
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
+      >
+        <h2 class="h5 fw-bold mb-0">
+          {% if can_view_all_feedback %} Trekker Feedback ({{ reviews|length }})
+          {% else %} Your Post-Trek Feedback {% endif %}
+        </h2>
+        {% if user.role == 'user' and trek.status == 'Completed' and
+        existing_booking %}
+        <a
+          href="{{ url_for('review.add_review', trek_id=trek.id) }}"
+          class="btn btn-sm btn-trek"
+        >
+          {{ 'Edit Your Feedback' if existing_review else 'Submit Feedback' }}
+        </a>
+        {% endif %}
+      </div>
+
+      {% if can_view_all_feedback %} {% if reviews %} {% for r in reviews %}
+      <div class="border rounded-3 p-3 mb-2">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="fw-semibold">{{ r.user.name }}</span>
+          <span class="badge bg-info text-dark">{{ r.rating }} / 5</span>
+        </div>
+        {% if r.comment %}
+        <p class="small mb-1">{{ r.comment }}</p>
+        {% endif %}
+        <small class="text-muted"
+          >{{ r.created_at.strftime('%d %b %Y') }}</small
+        >
+      </div>
+      {% endfor %} {% else %}
+      <p class="text-muted small mb-0">
+        No feedback submitted for this trek yet.
+      </p>
+      {% endif %} {% else %} {% if existing_review %}
+      <div class="border rounded-3 p-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="fw-semibold">Your Submitted Feedback</span>
+          <span class="badge bg-info text-dark"
+            >{{ existing_review.rating }} / 5</span
+          >
+        </div>
+        {% if existing_review.comment %}
+        <p class="small mb-1">{{ existing_review.comment }}</p>
+        {% endif %}
+        <small class="text-muted"
+          >Private to you, your trek guide, and Admin &middot; {{
+          existing_review.created_at.strftime('%d %b %Y') }}</small
+        >
+      </div>
+      {% elif trek.status == 'Completed' and existing_booking %}
+      <p class="text-muted small mb-0">
+        Feedback is private to you, the trek guide, and Admin. Click
+        <strong>Submit Feedback</strong> above to share your experience.
+      </p>
+      {% else %}
+      <p class="text-muted small mb-0">
+        Feedback becomes available once you complete this trek. Only you, the
+        trek guide, and Admin can view it.
+      </p>
+      {% endif %} {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card card-trek bg-white p-4">
+      <div class="d-flex justify-content-between align-items-baseline mb-3">
+        <span class="text-muted small fw-semibold">PRICE PER SLOT</span>
+        <span class="h3 fw-bold text-success mb-0"
+          >{{ format_inr(trek.price) }}</span
+        >
+      </div>
+
+      {% if trek.status == 'Open' and trek.available_slots > 0 %}
+      <form
+        action="{{ url_for('user.book_trek', trek_id=trek.id) }}"
+        method="POST"
+      >
+        <div class="mb-3">
+          <label for="slots_booked" class="form-label fw-semibold"
+            >Number of Slots</label
+          >
+          <input
+            type="number"
+            class="form-control"
+            id="slots_booked"
+            name="slots_booked"
+            min="1"
+            max="{{ trek.available_slots }}"
+            value="1"
+            required
+          />
+          <div class="form-text">
+            Up to {{ trek.available_slots }} slot(s) available.
+          </div>
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-trek btn-lg">Book Now</button>
+        </div>
+      </form>
+      {% elif trek.status != 'Open' %}
+      <div class="alert alert-secondary mb-0">
+        Booking is currently unavailable because this trek is
+        <strong>{{ trek.status }}</strong>.
+      </div>
+      {% else %}
+      <div class="alert alert-warning mb-0">
+        All slots for this trek are currently sold out.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

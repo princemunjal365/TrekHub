@@ -1,0 +1,192 @@
+{% extends "base.html" %} {% block title %}TrekHub - Plan, Lead &amp; Track
+Treks{% endblock %} {% block content %}
+<section class="card-trek p-4 p-lg-5 mb-4">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-7">
+      <span class="badge bg-info mb-3"
+        >Trekking Operations &amp; Booking Platform</span
+      >
+      <h1 class="display-6 fw-bold mb-3">
+        Plan, Lead &amp; Track Every Trek From One Place
+      </h1>
+      <p class="text-muted fs-6 mb-4">
+        Coordinate expeditions across Admins, Guides, and Trekkers with
+        date-bound trek stages, verified Razorpay slot payments, live route
+        check-ins, and private post-trek feedback.
+      </p>
+      <div class="d-flex flex-wrap gap-2">
+        {% if current_user %} {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-trek px-4"
+          >Open Admin Dashboard</a
+        >
+        <a
+          href="{{ url_for('admin.manage_treks') }}"
+          class="btn btn-outline-trek px-4"
+          >Manage Treks</a
+        >
+        {% elif current_user.role == 'staff' %}
+        <a href="{{ url_for('staff.dashboard') }}" class="btn btn-trek px-4"
+          >Open Guide Dashboard</a
+        >
+        <a
+          href="{{ url_for('staff.assigned_treks') }}"
+          class="btn btn-outline-trek px-4"
+          >Assigned Treks</a
+        >
+        {% else %}
+        <a href="{{ url_for('user.dashboard') }}" class="btn btn-trek px-4"
+          >Explore Open Treks</a
+        >
+        <a
+          href="{{ url_for('user.bookings') }}"
+          class="btn btn-outline-trek px-4"
+          >My Bookings</a
+        >
+        {% endif %} {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-trek px-4"
+          >Get Started</a
+        >
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-trek px-4"
+          >Sign In</a
+        >
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="stat-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="small text-uppercase fw-bold text-muted"
+            >Workflow Highlights</span
+          >
+          <span class="badge bg-success">Date-Bound</span>
+        </div>
+        <div class="d-grid gap-3 small">
+          <div class="d-flex align-items-start gap-3">
+            <span class="badge bg-primary mt-0.5">01</span>
+            <div>
+              <div class="fw-bold">Payment-First Slot Booking</div>
+              <div class="text-muted">
+                Slots are reserved only after Razorpay checkout verification.
+              </div>
+            </div>
+          </div>
+          <div class="d-flex align-items-start gap-3">
+            <span class="badge bg-info mt-0.5">02</span>
+            <div>
+              <div class="fw-bold">Live Trail Checkpoints</div>
+              <div class="text-muted">
+                Guides and trekkers share real-time route updates.
+              </div>
+            </div>
+          </div>
+          <div class="d-flex align-items-start gap-3">
+            <span class="badge bg-warning mt-0.5">03</span>
+            <div>
+              <div class="fw-bold">Private Post-Trek Feedback</div>
+              <div class="text-muted">
+                Completed trek reviews stay strictly private to the trekker,
+                guide, and Admin.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mb-4">
+  <div class="card-trek p-4">
+    <div
+      class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
+    >
+      <h2 class="h6 text-uppercase fw-bold text-muted mb-0">
+        Trek Lifecycle Stages
+      </h2>
+      <span class="small text-muted">Locked once marked Completed</span>
+    </div>
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <div class="p-3 rounded-3 border bg-light h-100">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-bold">Open</span>
+            <span class="badge bg-success">Slots Open</span>
+          </div>
+          <p class="small text-muted mb-0">
+            Trekkers can browse and book available slots.
+          </p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-3 rounded-3 border bg-light h-100">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-bold">Closed</span>
+            <span class="badge bg-warning">Locked</span>
+          </div>
+          <p class="small text-muted mb-0">
+            Registration closed ahead of departure.
+          </p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-3 rounded-3 border bg-light h-100">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-bold">Started</span>
+            <span class="badge bg-info">In Progress</span>
+          </div>
+          <p class="small text-muted mb-0">
+            Expedition underway with live route tracking.
+          </p>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-3 rounded-3 border bg-light h-100">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-bold">Completed</span>
+            <span class="badge bg-primary">Feedback</span>
+          </div>
+          <p class="small text-muted mb-0">
+            Trek finished; private feedback opens for trekkers.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card-trek p-4 h-100">
+        <div class="feature-icon mb-3">AD</div>
+        <h2 class="h5 fw-bold mb-2">Admin</h2>
+        <p class="text-muted small mb-0">
+          Create treks with auto-calculated durations, assign approved guides,
+          approve or blacklist accounts, and inspect completed trek feedback.
+        </p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-trek p-4 h-100">
+        <div class="feature-icon mb-3">GD</div>
+        <h2 class="h5 fw-bold mb-2">Staff (Guides)</h2>
+        <p class="text-muted small mb-0">
+          Manage assigned active treks, adjust slots, move statuses within
+          scheduled dates, update participant states, and post checkpoints.
+        </p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card-trek p-4 h-100">
+        <div class="feature-icon mb-3">TR</div>
+        <h2 class="h5 fw-bold mb-2">Users (Trekkers)</h2>
+        <p class="text-muted small mb-0">
+          Search treks, pay via Razorpay Test Mode, track bookings and
+          cancellations, log trail check-ins, and submit private feedback.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

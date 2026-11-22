@@ -1,0 +1,195 @@
+{% extends "base.html" %} {% block title %}{{ 'Edit Trek' if trek else 'Create
+Trek' }} - TrekHub{% endblock %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h3 fw-bold mb-0">
+        {{ 'Edit Trek #' ~ trek.id if trek else 'Create New Trek' }}
+      </h1>
+      <a
+        href="{{ url_for('admin.manage_treks') }}"
+        class="btn btn-outline-secondary btn-sm"
+        >&larr; Back to Treks</a
+      >
+    </div>
+
+    <div class="card card-trek bg-white p-4">
+      <form
+        action="{{ url_for('admin.edit_trek', trek_id=trek.id) if trek else url_for('admin.create_trek') }}"
+        method="POST"
+      >
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="name" class="form-label fw-semibold">Trek Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="name"
+              name="name"
+              value="{{ trek.name if trek else '' }}"
+              placeholder="Kedarkantha Summit Trek"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="location" class="form-label fw-semibold"
+              >Location</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="location"
+              name="location"
+              value="{{ trek.location if trek else '' }}"
+              placeholder="Uttarakhand"
+              required
+            />
+          </div>
+
+          <div class="col-md-4">
+            <label for="difficulty" class="form-label fw-semibold"
+              >Difficulty</label
+            >
+            <select
+              class="form-select"
+              id="difficulty"
+              name="difficulty"
+              required
+            >
+              {% for diff in difficulties %} {% if (trek and trek.difficulty ==
+              diff) or (not trek and diff == 'Moderate') %}
+              <option value="{{ diff }}" selected>{{ diff }}</option>
+              {% else %}
+              <option value="{{ diff }}">{{ diff }}</option>
+              {% endif %} {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="total_slots" class="form-label fw-semibold"
+              >Total Slots</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="total_slots"
+              name="total_slots"
+              min="1"
+              value="{{ trek.total_slots if trek else 20 }}"
+              required
+            />
+          </div>
+
+          <div class="col-md-4">
+            <label for="price" class="form-label fw-semibold"
+              >Price per Trekker (INR)</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="price"
+              name="price"
+              min="0"
+              step="0.01"
+              value="{{ trek.price if trek else 4500 }}"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="start_date" class="form-label fw-semibold"
+              >Start Date</label
+            >
+            <input
+              type="date"
+              class="form-control"
+              id="start_date"
+              name="start_date"
+              value="{{ trek.start_date.strftime('%Y-%m-%d') if trek else '' }}"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="end_date" class="form-label fw-semibold"
+              >End Date</label
+            >
+            <input
+              type="date"
+              class="form-control"
+              id="end_date"
+              name="end_date"
+              value="{{ trek.end_date.strftime('%Y-%m-%d') if trek else '' }}"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="status" class="form-label fw-semibold"
+              >Trek Status</label
+            >
+            <select class="form-select" id="status" name="status" required>
+              {% for st in statuses %} {% if (trek and trek.status == st) or
+              (not trek and st == 'Open') %}
+              <option value="{{ st }}" selected>{{ st }}</option>
+              {% else %}
+              <option value="{{ st }}">{{ st }}</option>
+              {% endif %} {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="assigned_staff_id" class="form-label fw-semibold"
+              >Assign Trek Staff</label
+            >
+            <select
+              class="form-select"
+              id="assigned_staff_id"
+              name="assigned_staff_id"
+              required
+            >
+              {% for staff in approved_staff %} {% if trek and
+              trek.assigned_staff_id == staff.id %}
+              <option value="{{ staff.id }}" selected>
+                {{ staff.name }} ({{ staff.email }})
+              </option>
+              {% else %}
+              <option value="{{ staff.id }}">
+                {{ staff.name }} ({{ staff.email }})
+              </option>
+              {% endif %} {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label for="description" class="form-label fw-semibold"
+              >Description &amp; Itinerary Notes</label
+            >
+            <textarea
+              class="form-control"
+              id="description"
+              name="description"
+              rows="4"
+              placeholder="Route highlights, altitude, gear checklist, meeting point..."
+            >
+{{ trek.description if trek and trek.description else '' }}</textarea
+            >
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a
+            href="{{ url_for('admin.manage_treks') }}"
+            class="btn btn-outline-secondary"
+            >Cancel</a
+          >
+          <button type="submit" class="btn btn-trek">
+            {{ 'Update Trek' if trek else 'Create Trek' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

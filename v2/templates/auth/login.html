@@ -1,0 +1,56 @@
+{% extends "base.html" %} {% block title %}Login - TrekHub{% endblock %} {%
+block content %}
+<div class="row justify-content-center my-4">
+  <div class="col-md-6 col-lg-5">
+    <div class="card card-trek bg-white p-4">
+      <h2 class="h4 fw-bold mb-1 text-center">Sign In to TrekHub</h2>
+      <p class="text-muted text-center small mb-4">
+        Access your Admin, Trek Staff, or Trekker dashboard
+      </p>
+
+      <form action="{{ url_for('auth.login') }}" method="POST">
+        <div class="mb-3">
+          <label for="email" class="form-label fw-semibold"
+            >Email Address</label
+          >
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            autofocus
+          />
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label fw-semibold">Password</label>
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+
+        <div class="d-grid mb-3">
+          <button type="submit" class="btn btn-trek btn-lg">Login</button>
+        </div>
+      </form>
+
+      <hr class="my-3" />
+      <p class="text-center text-muted small mb-0">
+        New to TrekHub?
+        <a
+          href="{{ url_for('auth.register') }}"
+          class="fw-semibold text-decoration-none"
+          >Create an account</a
+        >
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

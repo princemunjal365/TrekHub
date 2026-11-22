@@ -1,0 +1,145 @@
+{% extends "base.html" %} {% block title %}Staff Dashboard - TrekHub{% endblock
+%} {% block content %}
+<div
+  class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"
+>
+  <div>
+    <h1 class="h3 fw-bold mb-1">Staff Dashboard</h1>
+    <p class="text-muted mb-0">
+      Welcome, {{ staff.name }}. Manage your assigned treks, slots, and
+      participants.
+    </p>
+  </div>
+  <a href="{{ url_for('staff.assigned_treks') }}" class="btn btn-trek"
+    >Manage Assigned Treks</a
+  >
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card stat-card bg-white p-3 h-100">
+      <span class="text-muted small fw-semibold">ASSIGNED TREKS</span>
+      <span class="display-6 fw-bold mt-1">{{ total_treks }}</span>
+      <a
+        href="{{ url_for('staff.assigned_treks') }}"
+        class="small text-decoration-none mt-2"
+        >View all assigned &rarr;</a
+      >
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat-card bg-white p-3 h-100">
+      <span class="text-muted small fw-semibold">REGISTERED PARTICIPANTS</span>
+      <span class="display-6 fw-bold mt-1">{{ total_participants }}</span>
+      <span class="small text-muted mt-2"
+        >Across active and completed treks</span
+      >
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat-card bg-white p-3 h-100">
+      <span class="text-muted small fw-semibold">STAFF STATUS</span>
+      <span class="fs-4 fw-bold text-success mt-2">Approved Guide</span>
+      <span class="small text-muted mt-2"
+        >{{ staff.experience or 'Active trek staff member' }}</span
+      >
+    </div>
+  </div>
+</div>
+
+<div class="card card-trek bg-white p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 fw-bold mb-0">Your Assigned Treks</h2>
+    <a
+      href="{{ url_for('staff.assigned_treks') }}"
+      class="btn btn-sm btn-outline-trek"
+      >Open Full Controls</a
+    >
+  </div>
+
+  {% if trek_stats %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-trekhub mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Trek &amp; Location</th>
+          <th>Dates</th>
+          <th>Registered / Total</th>
+          <th>Available Slots</th>
+          <th>Status</th>
+          <th>Quick Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in trek_stats %} {% set trek = item.trek %}
+        <tr>
+          <td>#{{ trek.id }}</td>
+          <td>
+            <div class="fw-semibold">{{ trek.name }}</div>
+            <small class="text-muted"
+              >{{ trek.location }} &middot; {{ trek.difficulty }}</small
+            >
+          </td>
+          <td class="small">
+            {{ trek.start_date.strftime('%d %b %Y') }}<br />
+            <span class="text-muted"
+              >to {{ trek.end_date.strftime('%d %b %Y') }}</span
+            >
+          </td>
+          <td class="fw-semibold">
+            {{ item.registered_count }} / {{ trek.total_slots }}
+          </td>
+          <td>{{ trek.available_slots }}</td>
+          <td>
+            <span class="badge {{ status_badge_class(trek.status) }}"
+              >{{ trek.status }}</span
+            >
+          </td>
+          <td>
+            <div class="d-flex flex-wrap gap-1">
+              <a
+                href="{{ url_for('staff.participants', trek_id=trek.id) }}"
+                class="btn btn-sm btn-outline-primary"
+                >Participants</a
+              >
+              <a
+                href="{{ url_for('location.view_location', trek_id=trek.id) }}"
+                class="btn btn-sm btn-outline-trek"
+                >Live Location</a
+              >
+              {% if trek.status in ('Open', 'Closed') %}
+              <form
+                action="{{ url_for('staff.mark_trek_status', trek_id=trek.id) }}"
+                method="POST"
+                class="d-inline"
+              >
+                <input type="hidden" name="status" value="Started" />
+                <button type="submit" class="btn btn-sm btn-primary">
+                  Mark Started
+                </button>
+              </form>
+              {% elif trek.status == 'Started' %}
+              <form
+                action="{{ url_for('staff.mark_trek_status', trek_id=trek.id) }}"
+                method="POST"
+                class="d-inline"
+              >
+                <input type="hidden" name="status" value="Completed" />
+                <button type="submit" class="btn btn-sm btn-dark">
+                  Mark Completed
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No treks have been assigned to you yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

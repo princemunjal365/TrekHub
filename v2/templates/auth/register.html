@@ -1,0 +1,131 @@
+{% extends "base.html" %} {% block title %}Register - TrekHub{% endblock %} {%
+block content %}
+<div class="row justify-content-center my-4">
+  <div class="col-md-8 col-lg-6">
+    <div class="card card-trek bg-white p-4">
+      <h2 class="h4 fw-bold mb-1 text-center">Create Your TrekHub Account</h2>
+      <p class="text-muted text-center small mb-4">
+        Register as a Trekker or apply as Trek Staff
+      </p>
+
+      <form action="{{ url_for('auth.register') }}" method="POST">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="name" class="form-label fw-semibold">Full Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="name"
+              name="name"
+              placeholder="Aarav Sharma"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="email" class="form-label fw-semibold"
+              >Email Address</label
+            >
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="password" class="form-label fw-semibold"
+              >Password</label
+            >
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              name="password"
+              minlength="6"
+              placeholder="Minimum 6 characters"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="role" class="form-label fw-semibold">Register As</label>
+            <select class="form-select" id="role" name="role" required>
+              <option value="user" selected>User (Trekker)</option>
+              <option value="staff">
+                Trek Staff (Requires Admin Approval)
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="phone" class="form-label fw-semibold"
+              >Phone Number</label
+            >
+            <input
+              type="tel"
+              class="form-control"
+              id="phone"
+              name="phone"
+              inputmode="numeric"
+              pattern="[0-9]{10}"
+              maxlength="10"
+              title="Enter a valid 10-digit mobile number"
+              placeholder="9876543210"
+              required
+            />
+          </div>
+
+          <div class="col-md-6">
+            <label for="emergency_contact" class="form-label fw-semibold"
+              >Emergency Contact</label
+            >
+            <input
+              type="tel"
+              class="form-control"
+              id="emergency_contact"
+              name="emergency_contact"
+              inputmode="numeric"
+              pattern="[0-9]{10}"
+              maxlength="10"
+              title="Enter a valid 10-digit mobile number"
+              placeholder="9876543210"
+            />
+          </div>
+
+          <div class="col-12">
+            <label for="experience" class="form-label fw-semibold"
+              >Guiding Experience
+              <span class="text-muted fw-normal">(Trek Staff only)</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="experience"
+              name="experience"
+              placeholder="e.g., 4 years Himalayan high-altitude guiding, First Aid certified"
+            />
+          </div>
+        </div>
+
+        <div class="d-grid mt-4 mb-3">
+          <button type="submit" class="btn btn-trek btn-lg">Register</button>
+        </div>
+      </form>
+
+      <hr class="my-3" />
+      <p class="text-center text-muted small mb-0">
+        Already have an account?
+        <a
+          href="{{ url_for('auth.login') }}"
+          class="fw-semibold text-decoration-none"
+          >Sign in here</a
+        >
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

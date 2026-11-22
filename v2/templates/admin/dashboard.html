@@ -1,0 +1,257 @@
+{% extends "base.html" %} {% block title %}Admin Dashboard - TrekHub{% endblock
+%} {% block content %}
+<div
+  class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom"
+>
+  <div>
+    <h1 class="h3 fw-bold mb-1">Admin Dashboard</h1>
+    <p class="text-muted small mb-0">
+      Platform overview, trek lifecycle status, and operations
+    </p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('admin.create_trek') }}" class="btn btn-trek btn-sm"
+      >+ Create Trek</a
+    >
+    <a
+      href="{{ url_for('admin.manage_treks') }}"
+      class="btn btn-outline-trek btn-sm"
+      >Manage Treks</a
+    >
+    <a
+      href="{{ url_for('admin.completed_feedback') }}"
+      class="btn btn-outline-trek btn-sm"
+      >Trek Feedback</a
+    >
+    <a
+      href="{{ url_for('admin.manage_staff') }}"
+      class="btn btn-outline-trek btn-sm"
+    >
+      Staff {% if pending_staff_count > 0 %}
+      <span class="badge bg-warning text-dark ms-1"
+        >{{ pending_staff_count }}</span
+      >
+      {% endif %}
+    </a>
+    <a
+      href="{{ url_for('admin.manage_users') }}"
+      class="btn btn-outline-trek btn-sm"
+      >Users</a
+    >
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="card card-trek bg-white p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-uppercase text-muted fw-semibold"
+          >Total Treks</span
+        >
+        <a
+          href="{{ url_for('admin.manage_treks') }}"
+          class="small text-decoration-none"
+          >View &rarr;</a
+        >
+      </div>
+      <div class="h2 fw-bold mb-1">{{ total_treks }}</div>
+      <div class="small text-muted">{{ completed_treks_count }} completed</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="card card-trek bg-white p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-uppercase text-muted fw-semibold"
+          >Active Bookings</span
+        >
+        <a
+          href="{{ url_for('admin.all_bookings') }}"
+          class="small text-decoration-none"
+          >History &rarr;</a
+        >
+      </div>
+      <div class="h2 fw-bold mb-1">{{ total_bookings }}</div>
+      <div class="small text-muted">Ongoing &amp; open treks</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="card card-trek bg-white p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-uppercase text-muted fw-semibold"
+          >Trekkers</span
+        >
+        <a
+          href="{{ url_for('admin.manage_users') }}"
+          class="small text-decoration-none"
+          >Manage &rarr;</a
+        >
+      </div>
+      <div class="h2 fw-bold mb-1">{{ total_users }}</div>
+      <div class="small text-muted">Registered accounts</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="card card-trek bg-white p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-uppercase text-muted fw-semibold"
+          >Trek Guides</span
+        >
+        <a
+          href="{{ url_for('admin.manage_staff') }}"
+          class="small text-decoration-none"
+          >Review &rarr;</a
+        >
+      </div>
+      <div class="h2 fw-bold mb-1">{{ total_staff }}</div>
+      <div class="small text-muted">
+        {{ pending_staff_count }} pending approval
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card card-trek bg-white p-4 mb-4">
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
+  >
+    <div>
+      <h2 class="h5 fw-bold mb-0">Trek Lifecycle Breakdown</h2>
+      <p class="small text-muted mb-0">
+        Distribution across Open, Closed, Started, and Completed treks
+      </p>
+    </div>
+    <span class="badge bg-light text-dark border"
+      >Total: {{ total_treks }}</span
+    >
+  </div>
+
+  {% if total_treks > 0 %}
+  <div class="progress mb-3" style="height: 10px">
+    <div
+      class="progress-bar bg-success"
+      role="progressbar"
+      style="width: {{ (status_counts.get('Open', 0) * 100 / total_treks)|round(1) }}%"
+    ></div>
+    <div
+      class="progress-bar bg-secondary"
+      role="progressbar"
+      style="width: {{ (status_counts.get('Closed', 0) * 100 / total_treks)|round(1) }}%"
+    ></div>
+    <div
+      class="progress-bar bg-primary"
+      role="progressbar"
+      style="width: {{ (status_counts.get('Started', 0) * 100 / total_treks)|round(1) }}%"
+    ></div>
+    <div
+      class="progress-bar bg-dark"
+      role="progressbar"
+      style="width: {{ (status_counts.get('Completed', 0) * 100 / total_treks)|round(1) }}%"
+    ></div>
+  </div>
+  {% endif %}
+
+  <div class="row g-3">
+    {% for st in ['Open', 'Closed', 'Started', 'Completed'] %}
+    <div class="col-6 col-md-3">
+      <div
+        class="bg-light rounded-3 p-3 h-100 d-flex justify-content-between align-items-center"
+      >
+        <div>
+          <div class="small text-muted fw-semibold">{{ st }}</div>
+          <div class="h4 fw-bold mb-0">{{ status_counts.get(st, 0) }}</div>
+        </div>
+        <span class="badge {{ status_badge_class(st) }}">{{ st }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card card-trek bg-white p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h2 class="h5 fw-bold mb-0">Recent Bookings</h2>
+          <p class="small text-muted mb-0">
+            Latest reservations on active treks
+          </p>
+        </div>
+        <a
+          href="{{ url_for('admin.all_bookings') }}"
+          class="btn btn-sm btn-outline-trek"
+          >View All Bookings</a
+        >
+      </div>
+
+      {% if recent_bookings %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle table-trekhub mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Trekker</th>
+              <th>Trek</th>
+              <th class="text-center">Slots</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for booking in recent_bookings %}
+            <tr>
+              <td class="text-muted small">#{{ booking.id }}</td>
+              <td class="fw-semibold">{{ booking.user.name }}</td>
+              <td>{{ booking.trek.name }}</td>
+              <td class="text-center">{{ booking.slots_booked }}</td>
+              <td>
+                <span class="badge {{ status_badge_class(booking.status) }}"
+                  >{{ booking.status }}</span
+                >
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted small mb-0">No recent bookings on active treks.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card card-trek bg-white p-4 h-100">
+      <div class="mb-3">
+        <h2 class="h5 fw-bold mb-0">Popular Active Treks</h2>
+        <p class="small text-muted mb-0">Ranked by active bookings</p>
+      </div>
+
+      {% if popular_treks %}
+      <div class="list-group list-group-flush">
+        {% for trek_name, booking_count in popular_treks %}
+        <div
+          class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center"
+        >
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark border"
+              >{{ loop.index }}</span
+            >
+            <span class="fw-semibold">{{ trek_name }}</span>
+          </div>
+          <span
+            class="badge bg-success-subtle text-success border border-success-subtle"
+            >{{ booking_count }} booking(s)</span
+          >
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted small mb-0">No active treks available.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

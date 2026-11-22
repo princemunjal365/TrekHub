@@ -1,0 +1,210 @@
+{% extends "base.html" %} {% block title %}Live Location - {{ trek.name }} -
+TrekHub{% endblock %} {% block content %}
+<div
+  class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"
+>
+  <div>
+    <h1 class="h3 fw-bold mb-1">Live Trail Location &mdash; {{ trek.name }}</h1>
+    <p class="text-muted mb-0">
+      Follow your guide's latest checkpoint and share your position to stay
+      connected
+    </p>
+  </div>
+  {% if user.role == 'admin' %}
+  <a
+    href="{{ url_for('admin.manage_treks') }}"
+    class="btn btn-outline-secondary btn-sm"
+    >&larr; Back to Manage Treks</a
+  >
+  {% else %}
+  <a
+    href="{{ url_for('user.bookings') }}"
+    class="btn btn-outline-secondary btn-sm"
+    >&larr; Back to My Bookings</a
+  >
+  {% endif %}
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="card card-trek bg-white p-4 h-100">
+      <h2 class="h5 fw-bold mb-3">Latest Guide Checkpoint</h2>
+      {% if latest_staff_location %}
+      <div class="border rounded-3 p-3 bg-light">
+        <div
+          class="d-flex justify-content-between align-items-start gap-2 mb-2"
+        >
+          <div>
+            <h3 class="h5 fw-bold mb-1">
+              {{ latest_staff_location.checkpoint_name }}
+            </h3>
+            <p class="small text-muted mb-0">
+              Guide: {{ latest_staff_location.user.name }} &middot; {{
+              latest_staff_location.updated_at.strftime('%d %b %Y, %I:%M %p') }}
+            </p>
+          </div>
+          <span class="badge bg-primary">Staff</span>
+        </div>
+        <p class="small mb-2">
+          <strong>Coordinates:</strong> {{ latest_staff_location.latitude }}, {{
+          latest_staff_location.longitude }}
+        </p>
+        {% if latest_staff_location.note %}
+        <p class="small mb-3">{{ latest_staff_location.note }}</p>
+        {% endif %}
+        <a
+          href="https://www.google.com/maps?q={{ latest_staff_location.latitude }},{{ latest_staff_location.longitude }}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-trek btn-sm"
+        >
+          Open Guide Location in Google Maps
+        </a>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">
+        Your assigned guide has not posted a checkpoint yet.
+      </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card card-trek bg-white p-4 h-100">
+      <h2 class="h5 fw-bold mb-3">Share Your Checkpoint</h2>
+      <form
+        action="{{ url_for('location.update_location', trek_id=trek.id) }}"
+        method="POST"
+      >
+        <div class="mb-3">
+          <label for="checkpoint_name" class="form-label fw-semibold"
+            >Current Landmark / Checkpoint</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="checkpoint_name"
+            name="checkpoint_name"
+            placeholder="e.g., Base Camp Entry Gate"
+            required
+          />
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label for="latitude" class="form-label fw-semibold"
+              >Latitude</label
+            >
+            <input
+              type="number"
+              step="any"
+              min="-90"
+              max="90"
+              class="form-control"
+              id="latitude"
+              name="latitude"
+              placeholder="31.0226"
+              required
+            />
+          </div>
+          <div class="col-6">
+            <label for="longitude" class="form-label fw-semibold"
+              >Longitude</label
+            >
+            <input
+              type="number"
+              step="any"
+              min="-180"
+              max="180"
+              class="form-control"
+              id="longitude"
+              name="longitude"
+              placeholder="78.1720"
+              required
+            />
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="note" class="form-label fw-semibold">Status Note</label>
+          <input
+            type="text"
+            class="form-control"
+            id="note"
+            name="note"
+            placeholder="e.g., Reaching camp in 15 mins"
+          />
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-trek">Post My Location</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card card-trek bg-white p-4">
+  <h2 class="h5 fw-bold mb-3">All Trail Checkpoints</h2>
+  {% if updates %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-trekhub mb-0">
+      <thead>
+        <tr>
+          <th>Updated By</th>
+          <th>Role</th>
+          <th>Checkpoint</th>
+          <th>Coordinates</th>
+          <th>Note</th>
+          <th>Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in updates %}
+        <tr>
+          <td class="fw-semibold">{{ item.user.name }}</td>
+          <td>
+            <span
+              class="badge {{ 'bg-primary' if item.user.role == 'staff' else 'bg-secondary' }}"
+            >
+              {{ item.user.role|capitalize }}
+            </span>
+          </td>
+          <td>{{ item.checkpoint_name }}</td>
+          <td class="small">
+            <a
+              href="https://www.google.com/maps?q={{ item.latitude }},{{ item.longitude }}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-decoration-none"
+            >
+              {{ item.latitude }}, {{ item.longitude }}
+            </a>
+          </td>
+          <td class="small">{{ item.note or '-' }}</td>
+          <td class="small">
+            {{ item.updated_at.strftime('%d %b %Y, %I:%M %p') }}
+          </td>
+          <td>
+            {% if user.role == 'admin' or item.user_id == user.id %}
+            <form
+              action="{{ url_for('location.delete_location', location_id=item.id) }}"
+              method="POST"
+              class="d-inline"
+            >
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                Remove
+              </button>
+            </form>
+            {% else %}
+            <span class="text-muted small">-</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No trail checkpoints logged yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

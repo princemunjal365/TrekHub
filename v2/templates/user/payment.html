@@ -1,0 +1,165 @@
+{% extends "base.html" %} {% block title %}{{ 'Payment Receipt' if payment and
+payment.status in ('Paid', 'Refunded') else 'Razorpay Checkout' }} - TrekHub{%
+endblock %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h3 fw-bold mb-0">
+        {{ 'Payment Receipt' if payment and payment.status in ('Paid',
+        'Refunded') else 'Razorpay Test Checkout' }}
+      </h1>
+      {% if booking and user.role == 'admin' %}
+      <a
+        href="{{ url_for('admin.all_bookings') }}"
+        class="btn btn-outline-secondary btn-sm"
+        >&larr; Back to All Bookings</a
+      >
+      {% elif booking %}
+      <a
+        href="{{ url_for('user.bookings') }}"
+        class="btn btn-outline-secondary btn-sm"
+        >&larr; Back to My Bookings</a
+      >
+      {% else %}
+      <a
+        href="{{ url_for('user.trek_detail', trek_id=trek.id) }}"
+        class="btn btn-outline-secondary btn-sm"
+        >&larr; Back to Trek (No Slot Booked)</a
+      >
+      {% endif %}
+    </div>
+
+    <div class="card card-trek bg-white p-4 mb-4">
+      <h2 class="h5 fw-bold mb-3">Booking Summary</h2>
+      <div class="row g-2 small">
+        {% if booking %}
+        <div class="col-sm-6">
+          <strong>Booking ID:</strong> #{{ booking.id }}
+        </div>
+        <div class="col-sm-6">
+          <strong>Trekker:</strong> {{ booking.user.name }}
+        </div>
+        {% else %}
+        <div class="col-sm-6">
+          <strong>Registration Status:</strong> Pending Payment (No Slot Held
+          Yet)
+        </div>
+        <div class="col-sm-6"><strong>Trekker:</strong> {{ user.name }}</div>
+        {% endif %}
+        <div class="col-sm-6"><strong>Trek:</strong> {{ trek.name }}</div>
+        <div class="col-sm-6">
+          <strong>Location:</strong> {{ trek.location }}
+        </div>
+        <div class="col-sm-6">
+          <strong>Dates:</strong> {{ trek.start_date.strftime('%d %b %Y') }}
+          &ndash; {{ trek.end_date.strftime('%d %b %Y') }}
+        </div>
+        <div class="col-sm-6">
+          <strong>Slots Selected:</strong> {{ slots_booked }}
+        </div>
+      </div>
+      <hr />
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Total Payable Amount</span>
+        <span class="h4 fw-bold text-success mb-0"
+          >{{ format_inr(total_amount) }}</span
+        >
+      </div>
+    </div>
+
+    {% if payment and payment.status in ('Paid', 'Refunded') %}
+    <div class="card card-trek bg-white p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 fw-bold mb-0">Transaction Details</h2>
+        <span class="badge {{ status_badge_class(payment.status) }} fs-6"
+          >{{ payment.status }}</span
+        >
+      </div>
+      <dl class="row mb-0">
+        <dt class="col-sm-4 text-muted">Razorpay Payment ID</dt>
+        <dd class="col-sm-8 fw-semibold">{{ payment.transaction_id }}</dd>
+
+        <dt class="col-sm-4 text-muted">Payment Method</dt>
+        <dd class="col-sm-8">{{ payment.payment_method }}</dd>
+
+        <dt class="col-sm-4 text-muted">Amount</dt>
+        <dd class="col-sm-8">{{ format_inr(payment.amount) }}</dd>
+
+        <dt class="col-sm-4 text-muted">Date &amp; Time</dt>
+        <dd class="col-sm-8">
+          {{ payment.paid_at.strftime('%d %b %Y, %I:%M %p') }}
+        </dd>
+      </dl>
+    </div>
+    {% else %}
+    <div class="card card-trek bg-white p-4">
+      <span class="badge bg-info text-dark align-self-start mb-2"
+        >Razorpay Test Mode</span
+      >
+      <h2 class="h5 fw-bold mb-2">Pay to Confirm Your Trek Slots</h2>
+      <p class="text-muted small mb-4">
+        No slot is booked or deducted until Razorpay confirms a successful test
+        payment.
+      </p>
+
+      <form
+        id="razorpay-verify-form"
+        action="{{ url_for('payment.verify') }}"
+        method="POST"
+      >
+        {% if booking %}
+        <input type="hidden" name="booking_id" value="{{ booking.id }}" />
+        {% else %}
+        <input type="hidden" name="trek_id" value="{{ trek.id }}" />
+        <input type="hidden" name="slots" value="{{ slots_booked }}" />
+        {% endif %}
+        <input type="hidden" name="razorpay_order_id" id="razorpay_order_id" />
+        <input
+          type="hidden"
+          name="razorpay_payment_id"
+          id="razorpay_payment_id"
+        />
+        <input
+          type="hidden"
+          name="razorpay_signature"
+          id="razorpay_signature"
+        />
+
+        <div class="d-grid">
+          <button type="button" id="rzp-pay-btn" class="btn btn-trek btn-lg">
+            Pay {{ format_inr(total_amount) }} with Razorpay
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+      document.getElementById("rzp-pay-btn").addEventListener("click", function () {
+          var options = {
+              key: "{{ razorpay_key_id }}",
+              amount: {{ amount_paise }},
+              currency: "INR",
+              name: "TrekHub",
+              description: "{{ trek.name }} ({{ slots_booked }} slot(s))",
+              order_id: "{{ razorpay_order_id }}",
+              prefill: {
+                  name: "{{ user.name }}",
+                  email: "{{ user.email }}",
+                  contact: "{{ user.phone or '' }}"
+              },
+              handler: function (response) {
+                  document.getElementById("razorpay_order_id").value = response.razorpay_order_id;
+                  document.getElementById("razorpay_payment_id").value = response.razorpay_payment_id;
+                  document.getElementById("razorpay_signature").value = response.razorpay_signature;
+                  document.getElementById("razorpay-verify-form").submit();
+              }
+          };
+          var rzp = new Razorpay(options);
+          rzp.open();
+      });
+    </script>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
