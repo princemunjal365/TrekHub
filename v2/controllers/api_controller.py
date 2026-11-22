@@ -1,25 +1,58 @@
-from datetime import datetime
+from datetime import date, datetime
 from flask import request, jsonify
 from flask_jwt_extended import create_access_token, get_jwt_identity
 from sqlalchemy import or_, func
 from models import db, User, Trek, Booking, LocationUpdate, Review
 
-
 VALID_DIFFICULTIES = ("Easy", "Moderate", "Hard")
-VALID_TREK_STATUSES = ("Pending", "Approved", "Open", "Closed", "Started", "Completed")
+VALID_TREK_STATUSES = ("Open", "Closed", "Started", "Completed")
+
+
+def _as_date(value):
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    return datetime.strptime(str(value)[:10], "%Y-%m-%d").date()
+
+
+def _find_staff_clash(staff_id, start_date, end_date, exclude_trek_id=None):
+    if not staff_id or not start_date or not end_date:
+        return None
+
+    start_d = _as_date(start_date)
+    end_d = _as_date(end_date)
+
+    candidates = Trek.query.filter(
+        Trek.assigned_staff_id == int(staff_id),
+        Trek.status != "Completed",
+    ).all()
+
+    for other in candidates:
+        if exclude_trek_id is not None and other.id == exclude_trek_id:
+            continue
+        other_start = _as_date(other.start_date)
+        other_end = _as_date(other.end_date)
+        if start_d <= other_end and end_d >= other_start:
+            return other
+
+    return None
 
 
 def _get_current_user():
     identity = get_jwt_identity()
     if not identity:
         return None
-    return User.query.get(int(identity))
+    try:
+        return User.query.get(int(identity))
+    except (ValueError, TypeError):
+        return None
 
 
 def api_login():
     data = request.get_json(silent=True) or {}
-    email = str(data.get("email", "")).strip().lower()
-    password = str(data.get("password", ""))
+    email = str(data.get("email") or request.form.get("email") or "").strip().lower()
+    password = str(data.get("password") or request.form.get("password") or "")
 
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
@@ -83,7 +116,7 @@ def get_trek(trek_id):
     )
 
     data = trek.to_dict()
-    data["average_rating"] = round(avg_rating, 1) if avg_rating else None
+    data["average_rating"] = round(float(avg_rating), 1) if avg_rating is not None else None
     data["review_count"] = Review.query.filter_by(trek_id=trek.id).count()
     return jsonify({"trek": data}), 200
 
@@ -104,13 +137,21 @@ def create_trek():
         return jsonify({"error": "Invalid difficulty or status"}), 400
 
     try:
-        duration_days = int(data.get("duration_days", 0))
         total_slots = int(data.get("total_slots", 0))
         price = float(data.get("price", 0))
         start_date = datetime.strptime(str(data.get("start_date", "")), "%Y-%m-%d").date()
         end_date = datetime.strptime(str(data.get("end_date", "")), "%Y-%m-%d").date()
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid numeric values or date format (YYYY-MM-DD)"}), 400
+
+    raw_duration = data.get("duration_days")
+    if raw_duration is not None and str(raw_duration).strip() != "":
+        try:
+            duration_days = int(raw_duration)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid duration_days"}), 400
+    else:
+        duration_days = (end_date - start_date).days + 1
 
     if duration_days < 1 or total_slots < 1 or price < 0:
         return jsonify({"error": "Duration and slots must be at least 1, price cannot be negative"}), 400
@@ -119,12 +160,25 @@ def create_trek():
         return jsonify({"error": "End date cannot be earlier than start date"}), 400
 
     valid_staff_id = None
-    if assigned_staff_id is not None:
+    if assigned_staff_id is not None and str(assigned_staff_id).strip() != "":
+        try:
+            staff_id_int = int(assigned_staff_id)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid assigned_staff_id"}), 400
+
         staff = User.query.filter_by(
-            id=int(assigned_staff_id), role="staff", is_approved=True, is_blacklisted=False
+            id=staff_id_int, role="staff", is_approved=True, is_blacklisted=False
         ).first()
         if not staff:
             return jsonify({"error": "Assigned staff member is not eligible"}), 400
+
+        if status != "Completed":
+            clash = _find_staff_clash(staff.id, start_date, end_date)
+            if clash:
+                return jsonify({
+                    "error": f"{staff.name} is already assigned to '{clash.name}' ({clash.start_date} to {clash.end_date})"
+                }), 409
+
         valid_staff_id = staff.id
 
     trek = Trek(
@@ -149,6 +203,9 @@ def create_trek():
 
 def update_trek(trek_id):
     user = _get_current_user()
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
+
     trek = Trek.query.get(trek_id)
     if not trek:
         return jsonify({"error": "Trek not found"}), 404
@@ -158,13 +215,56 @@ def update_trek(trek_id):
 
     data = request.get_json(silent=True) or {}
 
+    new_start = trek.start_date
+    new_end = trek.end_date
+    if user.role != "staff":
+        if "start_date" in data:
+            try:
+                new_start = datetime.strptime(str(data["start_date"]), "%Y-%m-%d").date()
+            except (ValueError, TypeError):
+                return jsonify({"error": "Invalid start_date format (YYYY-MM-DD)"}), 400
+        if "end_date" in data:
+            try:
+                new_end = datetime.strptime(str(data["end_date"]), "%Y-%m-%d").date()
+            except (ValueError, TypeError):
+                return jsonify({"error": "Invalid end_date format (YYYY-MM-DD)"}), 400
+        if new_end < new_start:
+            return jsonify({"error": "End date cannot be earlier than start date"}), 400
+
+    new_status = trek.status
     if "status" in data:
         status = str(data["status"]).strip()
         if status not in VALID_TREK_STATUSES:
             return jsonify({"error": "Invalid trek status"}), 400
-        trek.status = status
-        if status == "Completed":
-            Booking.query.filter_by(trek_id=trek.id, status="Booked").update({"status": "Completed"})
+        if trek.status == "Completed" and status != "Completed":
+            return jsonify({"error": "Completed treks cannot be moved back to an earlier status"}), 400
+        new_status = status
+
+    new_staff_id = trek.assigned_staff_id
+    if user.role != "staff" and "assigned_staff_id" in data:
+        raw_staff = data["assigned_staff_id"]
+        if raw_staff is None or str(raw_staff).strip() == "":
+            new_staff_id = None
+        else:
+            try:
+                staff_id_int = int(raw_staff)
+            except (ValueError, TypeError):
+                return jsonify({"error": "Invalid assigned_staff_id"}), 400
+            staff = User.query.filter_by(
+                id=staff_id_int, role="staff", is_approved=True, is_blacklisted=False
+            ).first()
+            if not staff:
+                return jsonify({"error": "Assigned staff member is not eligible"}), 400
+            new_staff_id = staff.id
+
+    if new_staff_id and new_status != "Completed":
+        clash = _find_staff_clash(new_staff_id, new_start, new_end, exclude_trek_id=trek.id)
+        if clash:
+            staff_member = User.query.get(new_staff_id)
+            staff_name = staff_member.name if staff_member else "Selected staff"
+            return jsonify({
+                "error": f"{staff_name} is already assigned to '{clash.name}' ({clash.start_date} to {clash.end_date})"
+            }), 409
 
     booked_slots = (
         db.session.query(func.coalesce(func.sum(Booking.slots_booked), 0))
@@ -191,6 +291,10 @@ def update_trek(trek_id):
             if data["difficulty"] not in VALID_DIFFICULTIES:
                 return jsonify({"error": "Invalid difficulty"}), 400
             trek.difficulty = data["difficulty"]
+        if "start_date" in data or "end_date" in data:
+            trek.start_date = new_start
+            trek.end_date = new_end
+            trek.duration_days = (new_end - new_start).days + 1
         if "duration_days" in data:
             try:
                 duration_days = int(data["duration_days"])
@@ -218,6 +322,11 @@ def update_trek(trek_id):
             trek.available_slots = total_slots - booked_slots
         if "description" in data:
             trek.description = str(data["description"]).strip() or None
+        trek.assigned_staff_id = new_staff_id
+
+    trek.status = new_status
+    if new_status == "Completed":
+        Booking.query.filter_by(trek_id=trek.id, status="Booked").update({"status": "Completed"})
 
     db.session.commit()
     return jsonify({"message": "Trek updated", "trek": trek.to_dict()}), 200
@@ -257,6 +366,8 @@ def get_users():
 
 def get_user(user_id):
     current = _get_current_user()
+    if not current:
+        return jsonify({"error": "Authentication required"}), 401
     if current.role != "admin" and current.id != user_id:
         return jsonify({"error": "Not authorised to view this profile"}), 403
 
@@ -269,6 +380,8 @@ def get_user(user_id):
 
 def get_bookings():
     user = _get_current_user()
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
 
     if user.role == "admin":
         bookings = Booking.query.order_by(Booking.booking_date.desc()).all()
@@ -291,6 +404,8 @@ def get_bookings():
 
 def create_booking():
     user = _get_current_user()
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
     if user.role != "user":
         return jsonify({"error": "Only trekkers can book treks"}), 403
 
@@ -336,6 +451,9 @@ def create_booking():
 
 def cancel_booking(booking_id):
     user = _get_current_user()
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
+
     booking = Booking.query.get(booking_id)
     if not booking:
         return jsonify({"error": "Booking not found"}), 404
